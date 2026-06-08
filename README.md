@@ -1,280 +1,144 @@
-# tennis-machine-learning
+# Tennis Machine Learning
 
-A comprehensive machine learning project for predicting ATP tennis match outcomes and analyzing feature importance. This project implements multiple models to identify which player attributes most impact victory.
+Projeto acadêmico de mineração de dados para previsão de vencedores em partidas de tênis masculino (ATP), usando o *Tennis Match Charting Project* como fonte de dados.
 
-## Project Overview
+## Visão Geral
 
-**Objective:** Build ML models to predict tennis match outcomes and rank match attributes by their importance in determining winners at the professional level.
+**Problema:** prever o vencedor de uma partida antes de ela acontecer, com base no histórico de desempenho acumulado dos dois jogadores.
 
-**Models Implemented:**
-- **Decision Tree** - Provides interpretable rules and feature importance rankings
-- **Neural Network (MLP)** - Captures complex relationships and interactions between features
-- **Random Forest** - Ensemble method for robust predictions
-- **K-means Clustering** - Exploratory analysis to discover playing styles/tactics
+**Melhor modelo:** Regressão Logística — F1 ≈ 0,67 em validação cruzada (5-fold).
 
-## Quick Start
+**Feature mais preditiva:** diferença de rating ELO entre os jogadores (correlação 0,407 com o resultado).
 
-### 1. Install Dependencies
+---
+
+## Instalação
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Prepare Data
+---
 
-Download the ATP tennis dataset from Kaggle:
+## Previsão interativa
+
+Informe dois jogadores e o script retorna a probabilidade de vitória de cada um:
+
 ```bash
-kaggle datasets download -d dissfya/atp-tennis-2000-2023daily-pull -p data
+python predict_match.py
 ```
 
-Or use the provided `atp_tennis.csv` directly.
+**Exemplo de uso:**
 
-### 3. Train Models
+```
+╔══════════════════════════════════════╗
+║   Previsão de Partida de Tênis  🎾   ║
+╚══════════════════════════════════════╝
 
-#### Full Pipeline (All Models)
-```bash
-python -m tennis_ml \
-  --data atp_tennis.csv \
-  --model-type all \
-  --output-dir models/
+Jogador 1 (nome ou sobrenome): Djokovic
+  → Novak Djokovic
+Jogador 2 (nome ou sobrenome): Alcaraz
+  → Carlos Alcaraz
+
+  Superfícies disponíveis: Carpet, Clay, Grass, Hard
+  Superfície [Hard]: Clay
+
+──────────────────────────────────────────────
+  Jogador                            Prob. vitória
+──────────────────────────────────────────────
+  Novak Djokovic                           54.3%
+  Carlos Alcaraz                           45.7%
+──────────────────────────────────────────────
+
+  Favorito: Novak Djokovic
+  ELO Novak: 1924  |  ELO Carlos: 1832  |  Diferença: +92
+  Superfície: Clay
 ```
 
-#### Specific Model Types
-```bash
-# Decision Tree only
-python -m tennis_ml --data atp_tennis.csv --model-type tree --output-dir models/
+> **Primeira execução:** o modelo é treinado automaticamente a partir do dataset e salvo em `models/lr_charting.pkl`. As execuções seguintes carregam o modelo salvo.
 
-# Neural Network only
-python -m tennis_ml --data atp_tennis.csv --model-type neural --output-dir models/
+---
 
-# Random Forest only
-python -m tennis_ml --data atp_tennis.csv --model-type forest --output-dir models/
-```
-
-#### Basic Mode (Simple Baseline)
-```bash
-python -m tennis_ml \
-  --data atp_tennis.csv \
-  --model-type baseline \
-  --output-dir models/ \
-  --feature-columns Rank_1 Rank_2 Pts_1 Pts_2 \
-  --target-column Player_1_Wins
-```
-
-### 4. View Results
-
-All training results are saved to `models/training_results.json`:
-```bash
-cat models/training_results.json
-```
-
-This includes:
-- Model performance metrics (Accuracy, Precision, Recall, F1, ROC-AUC)
-- Top 20 most important features for each model
-- Paths to saved model files
-
-## Project Structure
+## Estrutura do projeto
 
 ```
 tennis-machine-learning/
-├── atp_tennis.csv                 # ATP match data (2000-2023)
-├── MINERAÇÃO DE DADOS_ EM PARTIDAS DE TÊNIS.pdf  # Requirements document (Portuguese)
-├── requirements.txt               # Python dependencies
-├── README.md                      # This file
-├── tennis_ml/
-│   ├── __init__.py               # Package exports
-│   ├── __main__.py               # CLI entrypoint
-│   ├── preprocessing.py          # Data loading & feature engineering
-│   ├── training.py               # Model training functions
-│   └── usage.py                  # Model loading & prediction
-└── tests/
-    ├── __init__.py
-    └── test_ml_pipeline.py       # Unit tests for all models
+├── predict_match.py                   # Script de previsão interativa
+├── requirements.txt                   # Dependências Python
+├── relatorio.md                       # Relatório acadêmico completo
+├── README.md
+├── models/
+│   └── lr_charting.pkl                # Modelo salvo (gerado na 1ª execução)
+└── new-dataset/
+    └── tennis_MatchChartingProject-master/
+        ├── matches.csv                          # 7.569 partidas com metadados
+        ├── charting-m-stats-Overview.csv        # Estatísticas gerais por partida
+        ├── charting-m-stats-Rally.csv           # Desempenho por comprimento de rally
+        ├── charting-m-stats-KeyPointsServe.csv  # Break points sofridos
+        ├── charting-m-stats-KeyPointsReturn.csv # Oportunidades de quebra
+        ├── charting-m-points-*.csv              # Histórico ponto a ponto
+        ├── tennis_player_latest_profiles.csv    # Último perfil de cada jogador
+        └── tennis_final_dataset.csv             # Dataset final para modelagem
+└── tennis_ml/
+    └── notebooks/
+        ├── 01_extract_overview.ipynb    # Features de serviço e retorno
+        ├── 02_extract_rally.ipynb       # Features de rally
+        ├── 03_extract_keypoints.ipynb   # Features de pontos decisivos
+        ├── 04_creating_winner_dataset.ipynb  # Extração do alvo
+        ├── 05_creating_profile_dataset.ipynb # Perfis + ELO
+        ├── 06_improving_matches_dataset.ipynb # Dataset final + diffs
+        ├── 07_eda.ipynb                 # Análise exploratória
+        └── 08_modelling.ipynb           # Treinamento e avaliação
 ```
 
-## Preprocessing Pipeline
+---
 
-The `load_and_preprocess_tennis_data()` function:
+## Pipeline de notebooks
 
-1. **Loads** tennis match data from CSV or ZIP archives
-2. **Cleans** data (replaces -1 with NaN)
-3. **Creates target** variable: `Player_1_Wins` (1 if Player_1 won, 0 otherwise)
-4. **Engineers features:**
-   - Date features: Year, Month, Day
-   - Player name encoding (Label Encoder)
-   - Numerical features: Rankings, Points, Odds, Best Of
-   - Categorical features: Tournament, Series, Court, Surface, Round
-5. **Imputes** missing values (median for numeric, mode for categorical)
-6. **Scales** numeric features (StandardScaler)
-7. **Encodes** categorical features (One-Hot Encoding)
-8. **Splits** data: 80% train, 20% test (stratified, random_state=42)
+| Notebook | O que faz | Saída |
+|---|---|---|
+| 01 | Extrai ratios de serviço/retorno e médias acumuladas | `features_overview.csv` |
+| 02 | Extrai eficiência por comprimento de rally | `features_rally.csv` |
+| 03 | Extrai desempenho em break points e game points | `features_keypoints.csv` |
+| 04 | Determina o vencedor de cada partida pelo último ponto | `winners.csv` |
+| 05 | Consolida perfis por jogador + ratings ELO global e por superfície | `tennis_player_profiles.csv` |
+| 06 | Monta dataset de partidas com features de ambos os jogadores e cria diffs | `tennis_final_dataset.csv` |
+| 07 | Análise exploratória: correlações, nulos, distribuições | — |
+| 08 | Treina e compara Benchmark ELO, XGBoost, MLP e Regressão Logística | — |
 
-## Feature Categories
+---
 
-### Numerical Features
-- `Rank_1`, `Rank_2` - Player rankings
-- `Pts_1`, `Pts_2` - ATP points
-- `Odd_1`, `Odd_2` - Betting odds
-- `Best of` - Number of sets in match
-- Date features: `Year`, `Month`, `Day`
-- Encoded players: `Player_1`, `Player_2`
+## Features do modelo
 
-### Categorical Features
-- `Tournament` - Tournament name
-- `Series` - Tournament series (ATP 250, 500, etc.)
-- `Court` - Indoor/Outdoor
-- `Surface` - Hard, Clay, Grass
-- `Round` - Match stage (1st Round, QF, SF, Final, etc.)
+O modelo usa **28 features**: 22 diferenças numéricas (`diff_feat = p1_feat − p2_feat`) + 3 categóricas.
 
-## Model Performance
+### Diferenças numéricas (22)
+| Grupo | Features |
+|---|---|
+| Serviço geral | `diff_avg_first_serve_pct`, `diff_avg_first_serve_won_pct`, `diff_avg_second_serve_won_pct`, `diff_avg_ace_pct`, `diff_avg_df_pct` |
+| Retorno | `diff_avg_return_won_pct` |
+| Qualidade de jogo | `diff_avg_winners_per_pt`, `diff_avg_ue_per_pt`, `diff_avg_winners_fh_ratio`, `diff_avg_bp_save_pct` |
+| Pontos decisivos | `diff_avg_bp_clutch_save_pct`, `diff_avg_bp_first_in_pct`, `diff_avg_bpo_conv_pct`, `diff_avg_bpo_ue_pct` |
+| Rally | `diff_avg_srv_win_1_3/4_6/7plus`, `diff_avg_ret_win_1_3/4_6/7plus` |
+| Ratings ELO | `diff_elo`, `diff_elo_surface` |
 
-Each trained model produces:
+### Categóricas (3)
+`Surface`, `Round`, `Best of`
 
-### Classification Metrics
-- **Accuracy** - Percentage of correct predictions
-- **Precision** - True positives / (True positives + False positives)
-- **Recall** - True positives / (True positives + False negatives)
-- **F1 Score** - Harmonic mean of Precision and Recall
-- **ROC-AUC** - Area under the ROC curve
+---
 
-### Feature Importance
-Top 20 features ranked by their impact on predictions:
-```json
-{
-  "decision_tree": [
-    ["Rank_1", 0.235],
-    ["Odd_1", 0.189],
-    ["Pts_1", 0.156],
-    ...
-  ]
-}
-```
+## Resultados dos modelos (validação cruzada)
 
-## Exploratory Analysis: K-means Clustering
+| Modelo | F1 (CV) | Observação |
+|---|---|---|
+| Benchmark ELO | ~0,665 | Regra determinística |
+| XGBoost | 0,661 ± 0,008 | Gradient boosting |
+| MLP | 0,664 ± 0,006 | 3 camadas (128–64–32) |
+| **Regressão Logística** | **0,669 ± 0,010** | Melhor resultado |
 
-The K-means clustering identifies natural groupings of matches without using the win/loss label:
-- Discovers 3 distinct playing style profiles
-- Helps understand match characteristics and tactics
-- Reveals whether certain player/surface combinations form clusters
+---
 
-## Testing
+## Fonte de dados
 
-Run the full test suite:
-```bash
-python -m unittest discover -v
-```
-
-Run specific test file:
-```bash
-python -m unittest tests.test_ml_pipeline -v
-```
-
-## File Formats
-
-### Input: CSV Tennis Data
-```csv
-Tournament,Date,Series,Court,Surface,Round,Best of,Player_1,Player_2,Winner,Rank_1,Rank_2,Pts_1,Pts_2,Odd_1,Odd_2,Score
-Australian Hardcourt Championships,2000-01-03,International,Outdoor,Hard,1st Round,3,Dosedel S.,Ljubicic I.,Dosedel S.,63,77,-1,-1,-1,-1.0,6-4 6-2
-...
-```
-
-### Output: Model Files
-- `*.pkl` - Scikit-learn models (pickled for Decision Tree, Neural Network, Random Forest, K-means)
-- `training_results.json` - Comprehensive results summary with metrics and feature importance
-
-### Results JSON Structure
-```json
-{
-  "models": {
-    "decision_tree": {
-      "metrics": {
-        "accuracy": 0.752,
-        "precision": 0.731,
-        "recall": 0.698,
-        "f1": 0.714,
-        "roc_auc": 0.821
-      },
-      "model_path": "models/decision_tree_model.pkl"
-    },
-    ...
-  },
-  "feature_importance": {
-    "decision_tree": [
-      ["Rank_1", 0.235],
-      ["Odd_1", 0.189],
-      ...
-    ]
-  }
-}
-```
-
-## Module Usage
-
-### In Python Code
-
-```python
-from tennis_ml import (
-    load_and_preprocess_tennis_data,
-    train_decision_tree,
-    train_neural_network,
-    evaluate_model,
-    get_feature_importance,
-    save_model,
-    load_model,
-    predict,
-)
-
-# Load and preprocess data
-X_train, X_test, y_train, y_test, feature_names = load_and_preprocess_tennis_data("atp_tennis.csv")
-
-# Train Decision Tree
-dt_model = train_decision_tree(X_train, y_train, max_depth=10)
-
-# Evaluate
-metrics = evaluate_model(dt_model, X_test, y_test)
-print(f"Accuracy: {metrics['accuracy']:.4f}")
-
-# Get feature importance
-importance = get_feature_importance(dt_model, feature_names, top_n=20)
-for feature, score in importance:
-    print(f"{feature}: {score:.4f}")
-
-# Save and load model
-save_model(dt_model, "models/my_model.pkl")
-loaded_model = load_model("models/my_model.pkl")
-
-# Make predictions
-predictions = predict(loaded_model, X_test)
-```
-
-## Data Source
-
-**Dataset:** ATP Tennis matches 2000-2023
-**Source:** Kaggle - https://www.kaggle.com/datasets/dissfya/atp-tennis-2000-2023daily-pull
-
-**Notes:**
-- Contains ~180,000 historical ATP matches
-- Missing odds data for earlier years (pre-2015)
-- Some ranking data gaps (more complete from 2000+)
-- Surface and court information complete for most records
-
-## Requirements Document
-
-The project requirements and objectives are detailed in:
-`MINERAÇÃO DE DADOS_ EM PARTIDAS DE TÊNIS.pdf` (Portuguese)
-
-Key requirements:
-- Predict match outcomes (victory/defeat) using player statistics
-- Rank attributes by importance in determining winners
-- Implement Decision Tree (for interpretability) and Neural Network (for complexity)
-- Perform exploratory clustering analysis
-- Identify which playing styles have higher win rates
-
-## Dependencies
-
-- **pandas** - Data loading and manipulation
-- **numpy** - Numerical operations
-- **scikit-learn** - ML algorithms and preprocessing
-- **scipy** - Scientific computing utilities
-
-See `requirements.txt` for version specifications.
+**Tennis Match Charting Project** — base colaborativa com estatísticas ponto a ponto de partidas ATP.
+Repositório original: [tennis_MatchChartingProject](https://github.com/JeffSackmann/tennis_MatchChartingProject)
